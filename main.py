@@ -1,65 +1,43 @@
 import speech_recognition as sr
-import nlp
-import machine_learning as ml
-import translation
-import ui
+from nlp import get_intent
+from machine_learning import predict_action
+from translation import translate_text
 
-def main():
-    # Initialize the UI
-    ui.init()
+# Initialize the speech recognizer
+r = sr.Recognizer()
 
-    # Set up the speech recognition object
-    r = sr.Recognizer()
+# Define the voice command function
+def voice_command():
+    # Initialize the text variable
+    text = ""
 
-    # Continuously listen for user input
-    while True:
-        try:
-            # Listen for user input
-            text = listen(r)
-            
-            # Process the user input
-            processed_text = process_input(text)
-            
-            # Generate a response
-            response = generate_response(processed_text)
-            
-            # Speak the response
-            speak(response)
-            
-        except sr.UnknownValueError:
-            # If the speech recognizer could not understand the user input, continue listening
-            continue
-
-def listen(r):
-    """
-    Uses the speech recognizer object to listen for user input and returns the transcribed text.
-    """
+    # Record the audio
     with sr.Microphone() as source:
-        print("Say something!")
+        print("Say something...")
         audio = r.listen(source)
-    return r.recognize_google(audio)
 
-def process_input(text):
-    """
-    Uses NLP techniques to process the user input and extract relevant information.
-    """
-    processed_text = nlp.process(text)
-    return processed_text
+    # Attempt to recognize the speech
+    try:
+        text = r.recognize_google(audio)
+        print(f"You said: {text}")
 
-def generate_response(processed_text):
-    """
-    Uses machine learning algorithms to generate a response based on the processed input.
-    """
-    response = ml.generate(processed_text)
-    return response
+        # Translate the speech to English
+        translated_text = translate_text(text, "en")
+        print(f"Translated text: {translated_text}")
 
-def speak(response):
-    """
-    Uses a text-to-speech library to speak the generated response.
-    """
-    translated_response = translation.translate(response)
-    ui.update(translated_response)
-    # Add code here to speak the translated response
+        # Get the intent of the speech
+        intent = get_intent(translated_text)
+        print(f"Intent: {intent}")
 
-if __name__ == '__main__':
-    main()
+        # Predict the action to take based on the intent
+        action = predict_action(intent)
+        print(f"Action: {action}")
+
+        # Add code here to perform the action
+    except sr.UnknownValueError:
+        print("Could not understand audio")
+    except sr.RequestError as e:
+        print(f"Could not request results from Google Speech Recognition service; {e}")
+
+# Call the voice command function
+voice_command()
